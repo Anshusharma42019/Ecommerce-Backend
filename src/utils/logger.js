@@ -20,8 +20,8 @@ const consoleFormat = winston.format.combine(
 
 const transports = [new winston.transports.Console({ format: consoleFormat })];
 
-// Only add file transports in non-serverless environments
-if (process.env.NODE_ENV !== 'production' || process.env.ENABLE_FILE_LOGS === 'true') {
+// Only add file transports when explicitly enabled (never on Vercel/serverless)
+if (process.env.ENABLE_FILE_LOGS === 'true') {
   const DailyRotateFile = require('winston-daily-rotate-file');
   const LOG_DIR = path.join(__dirname, '..', '..', 'logs');
   const fileFormat = winston.format.combine(
