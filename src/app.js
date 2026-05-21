@@ -160,6 +160,11 @@ app.use('/api/v1/docs', swaggerUi.serve, swaggerUi.setup(specs, {
 // ─── API Routes ───────────────────────────────────────────────────────────────
 app.use(process.env.API_PREFIX || '/api/v1', routes);
 
+// ─── Root ────────────────────────────────────────────────────────────────────
+app.get('/', (req, res) => {
+  res.status(200).json({ success: true, message: 'Triven E-Commerce API is running 🚀' });
+});
+
 // ─── 404 Handler ─────────────────────────────────────────────────────────────
 app.use(notFound);
 
