@@ -74,8 +74,10 @@ if (process.env.NODE_ENV !== 'test') {
 }
 app.use(requestLogger);
 
-// ─── Static Files ─────────────────────────────────────────────────────────────
-app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+// ─── Static Files (local dev only) ──────────────────────────────────────────
+if (process.env.NODE_ENV !== 'production') {
+  app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+}
 
 // ─── Rate Limiting ───────────────────────────────────────────────────────────
 app.use(generalLimiter);
