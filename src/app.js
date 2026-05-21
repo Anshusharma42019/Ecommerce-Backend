@@ -37,18 +37,22 @@ app.use(helmet({
 }));
 
 // ─── CORS ─────────────────────────────────────────────────────────────────────
-const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:3000,http://127.0.0.1:5500,http://localhost:5500').split(',').map(o => o.trim());
-app.use(cors({
-  origin: (origin, cb) => {
-    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
-    cb(new Error(`CORS policy does not allow origin: ${origin}`));
-  },
+const corsOptions = {
+  origin: [
+    'https://ecommerce-admin-jade-xi.vercel.app',
+    'https://ecommerce-backend-xi-ten.vercel.app',
+    'https://ecommerce-website-orcin-chi-51.vercel.app',
+    'http://localhost:3000',
+    'http://localhost:5000',
+    'http://127.0.0.1:5500',
+    'http://localhost:5500',
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-}));
-
-app.options('*', cors());
+};
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 // ─── Body Parsers ────────────────────────────────────────────────────────────
 app.use(express.json({ limit: '10mb' }));
