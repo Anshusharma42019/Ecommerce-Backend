@@ -1,0 +1,213 @@
+'use strict';
+
+// ─── HTTP Status Codes ────────────────────────────────────────────────────────
+const HTTP_STATUS = {
+  OK: 200,
+  CREATED: 201,
+  NO_CONTENT: 204,
+  BAD_REQUEST: 400,
+  UNAUTHORIZED: 401,
+  FORBIDDEN: 403,
+  NOT_FOUND: 404,
+  CONFLICT: 409,
+  UNPROCESSABLE: 422,
+  TOO_MANY_REQUESTS: 429,
+  INTERNAL_ERROR: 500,
+  SERVICE_UNAVAILABLE: 503,
+};
+
+// ─── User Roles ───────────────────────────────────────────────────────────────
+const ROLES = {
+  USER: 'user',
+  ADMIN: 'admin',
+  VENDOR: 'vendor',
+  SUPER_ADMIN: 'super_admin',
+};
+
+// ─── Order Statuses ───────────────────────────────────────────────────────────
+const ORDER_STATUS = {
+  PENDING: 'pending',
+  CONFIRMED: 'confirmed',
+  PROCESSING: 'processing',
+  SHIPPED: 'shipped',
+  OUT_FOR_DELIVERY: 'out_for_delivery',
+  DELIVERED: 'delivered',
+  CANCELLED: 'cancelled',
+  RETURN_REQUESTED: 'return_requested',
+  RETURNED: 'returned',
+  REFUNDED: 'refunded',
+  FAILED: 'failed',
+};
+
+// ─── Payment Statuses ─────────────────────────────────────────────────────────
+const PAYMENT_STATUS = {
+  PENDING: 'pending',
+  CREATED: 'created',
+  AUTHORIZED: 'authorized',
+  CAPTURED: 'captured',
+  PAID: 'paid',
+  FAILED: 'failed',
+  REFUNDED: 'refunded',
+  PARTIALLY_REFUNDED: 'partially_refunded',
+  CANCELLED: 'cancelled',
+};
+
+// ─── Payment Methods ──────────────────────────────────────────────────────────
+const PAYMENT_METHOD = {
+  RAZORPAY: 'razorpay',
+  STRIPE: 'stripe',
+  COD: 'cod',
+  WALLET: 'wallet',
+};
+
+// ─── Notification Types ───────────────────────────────────────────────────────
+const NOTIFICATION_TYPE = {
+  ORDER_PLACED: 'order_placed',
+  ORDER_CONFIRMED: 'order_confirmed',
+  ORDER_SHIPPED: 'order_shipped',
+  ORDER_DELIVERED: 'order_delivered',
+  ORDER_CANCELLED: 'order_cancelled',
+  ORDER_RETURNED: 'order_returned',
+  PAYMENT_SUCCESS: 'payment_success',
+  PAYMENT_FAILED: 'payment_failed',
+  REFUND_INITIATED: 'refund_initiated',
+  REFUND_SUCCESS: 'refund_success',
+  PROMO: 'promo',
+  SYSTEM: 'system',
+};
+
+// ─── Coupon Types ─────────────────────────────────────────────────────────────
+const COUPON_TYPE = {
+  PERCENTAGE: 'percentage',
+  FLAT: 'flat',
+  FREE_SHIPPING: 'free_shipping',
+  BUY_X_GET_Y: 'buy_x_get_y',
+};
+
+// ─── Cache TTL (seconds) ──────────────────────────────────────────────────────
+const CACHE_TTL = {
+  PRODUCT_LIST: 300,       // 5 min
+  PRODUCT_DETAIL: 600,     // 10 min
+  CATEGORY_LIST: 1800,     // 30 min
+  USER_PROFILE: 300,       // 5 min
+  ORDER_LIST: 60,          // 1 min
+  ANALYTICS: 900,          // 15 min
+  OTP: 600,                // 10 min
+};
+
+// ─── Pagination ───────────────────────────────────────────────────────────────
+const PAGINATION = {
+  DEFAULT_PAGE: 1,
+  DEFAULT_LIMIT: 20,
+  MAX_LIMIT: 100,
+};
+
+// ─── Sort Options ─────────────────────────────────────────────────────────────
+const SORT_OPTIONS = {
+  NEWEST: '-createdAt',
+  OLDEST: 'createdAt',
+  PRICE_ASC: 'price',
+  PRICE_DESC: '-price',
+  RATING: '-averageRating',
+  POPULAR: '-totalSold',
+  FEATURED: '-isFeatured',
+};
+
+// ─── File Upload ──────────────────────────────────────────────────────────────
+const UPLOAD = {
+  MAX_SIZE_MB: 5,
+  MAX_SIZE_BYTES: 5 * 1024 * 1024,
+  ALLOWED_MIME_TYPES: ['image/jpeg', 'image/png', 'image/webp'],
+  MAX_PRODUCT_IMAGES: 10,
+};
+
+// ─── Token Types ──────────────────────────────────────────────────────────────
+const TOKEN_TYPE = {
+  ACCESS: 'access',
+  REFRESH: 'refresh',
+  RESET_PASSWORD: 'reset_password',
+  EMAIL_VERIFY: 'email_verify',
+};
+
+// ─── Environments ─────────────────────────────────────────────────────────────
+const ENVIRONMENTS = {
+  DEVELOPMENT: 'development',
+  PRODUCTION: 'production',
+  TEST: 'test',
+  STAGING: 'staging',
+};
+
+// ─── API Response Messages ────────────────────────────────────────────────────
+const MESSAGES = {
+  // Auth
+  REGISTER_SUCCESS: 'Registration successful. Please verify your email.',
+  LOGIN_SUCCESS: 'Login successful.',
+  LOGOUT_SUCCESS: 'Logout successful.',
+  EMAIL_VERIFIED: 'Email verified successfully.',
+  OTP_SENT: 'OTP sent successfully.',
+  OTP_VERIFIED: 'OTP verified successfully.',
+  OTP_INVALID: 'Invalid or expired OTP.',
+  TOKEN_REFRESHED: 'Access token refreshed.',
+  PASSWORD_RESET_EMAIL: 'Password reset link sent to your email.',
+  PASSWORD_RESET_SUCCESS: 'Password reset successful.',
+  INVALID_CREDENTIALS: 'Invalid email or password.',
+  EMAIL_ALREADY_EXISTS: 'Email already registered.',
+  ACCOUNT_NOT_VERIFIED: 'Please verify your email before logging in.',
+  ACCOUNT_INACTIVE: 'Your account has been deactivated. Contact support.',
+
+  // Generic CRUD
+  CREATED: 'Created successfully.',
+  UPDATED: 'Updated successfully.',
+  DELETED: 'Deleted successfully.',
+  FETCHED: 'Fetched successfully.',
+  NOT_FOUND: 'Resource not found.',
+
+  // Products
+  PRODUCT_NOT_FOUND: 'Product not found.',
+  OUT_OF_STOCK: 'Product is out of stock.',
+  INSUFFICIENT_STOCK: 'Insufficient stock available.',
+
+  // Cart
+  CART_ITEM_ADDED: 'Item added to cart.',
+  CART_ITEM_REMOVED: 'Item removed from cart.',
+  CART_UPDATED: 'Cart updated.',
+  CART_CLEARED: 'Cart cleared.',
+
+  // Order
+  ORDER_PLACED: 'Order placed successfully.',
+  ORDER_CANCELLED: 'Order cancelled successfully.',
+  ORDER_CANCEL_FORBIDDEN: 'Order cannot be cancelled at this stage.',
+  RETURN_REQUESTED: 'Return request submitted.',
+
+  // Payment
+  PAYMENT_INITIATED: 'Payment initiated.',
+  PAYMENT_SUCCESS: 'Payment successful.',
+  PAYMENT_FAILED: 'Payment failed.',
+  PAYMENT_VERIFIED: 'Payment verified.',
+  REFUND_INITIATED: 'Refund initiated.',
+  INVALID_SIGNATURE: 'Invalid payment signature.',
+
+  // Server
+  INTERNAL_ERROR: 'Internal server error.',
+  UNAUTHORIZED: 'Authentication required.',
+  FORBIDDEN: 'You do not have permission to perform this action.',
+  VALIDATION_ERROR: 'Validation failed.',
+  RATE_LIMIT: 'Too many requests. Please try again later.',
+};
+
+module.exports = {
+  HTTP_STATUS,
+  ROLES,
+  ORDER_STATUS,
+  PAYMENT_STATUS,
+  PAYMENT_METHOD,
+  NOTIFICATION_TYPE,
+  COUPON_TYPE,
+  CACHE_TTL,
+  PAGINATION,
+  SORT_OPTIONS,
+  UPLOAD,
+  TOKEN_TYPE,
+  ENVIRONMENTS,
+  MESSAGES,
+};
