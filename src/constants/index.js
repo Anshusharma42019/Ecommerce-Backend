@@ -60,6 +60,11 @@ const PAYMENT_METHOD = {
   WALLET: 'wallet',
 };
 
+// ─── COD Settings ─────────────────────────────────────────────────────────────
+const COD_SETTINGS = {
+  CONFIRMATION_CHARGE: 100, // ₹100 COD confirmation charge
+};
+
 // ─── Notification Types ───────────────────────────────────────────────────────
 const NOTIFICATION_TYPE = {
   ORDER_PLACED: 'order_placed',
@@ -174,7 +179,9 @@ const MESSAGES = {
   CART_CLEARED: 'Cart cleared.',
 
   // Order
+  COD_CONFIRMED: 'COD order confirmed. ₹100 confirmation charge collected.',
   ORDER_PLACED: 'Order placed successfully.',
+  COD_CHARGE_PAID: 'COD confirmation charge paid successfully.',
   ORDER_CANCELLED: 'Order cancelled successfully.',
   ORDER_CANCEL_FORBIDDEN: 'Order cannot be cancelled at this stage.',
   RETURN_REQUESTED: 'Return request submitted.',
@@ -201,6 +208,7 @@ module.exports = {
   ORDER_STATUS,
   PAYMENT_STATUS,
   PAYMENT_METHOD,
+  COD_SETTINGS,
   NOTIFICATION_TYPE,
   COUPON_TYPE,
   CACHE_TTL,

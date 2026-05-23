@@ -17,8 +17,9 @@ router.post('/webhook/razorpay',
 
 router.use(authenticate);
 
-router.post('/razorpay/:orderId', paymentLimiter, ctrl.createRazorpayOrder);
 router.post('/razorpay/verify', paymentLimiter, ctrl.verifyRazorpayPayment);
+router.post('/razorpay/fail/:orderId', paymentLimiter, ctrl.failRazorpayPayment);
+router.post('/razorpay/:orderId', paymentLimiter, ctrl.createRazorpayOrder);
 router.post('/stripe/:orderId', paymentLimiter, ctrl.createStripeIntent);
 router.post('/refund/:paymentId', authorize(ROLES.ADMIN), ctrl.initiateRefund);
 

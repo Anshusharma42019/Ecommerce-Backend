@@ -7,8 +7,9 @@ const notificationService = require('./notificationService');
 const { generateInvoicePDF } = require('../utils/pdfGenerator');
 const ApiError = require('../helpers/ApiError');
 const { parsePagination, buildPaginationMeta } = require('../helpers/paginate');
-const { ORDER_STATUS, PAYMENT_METHOD, MESSAGES, NOTIFICATION_TYPE } = require('../constants');
+const { ORDER_STATUS, PAYMENT_METHOD, PAYMENT_STATUS, MESSAGES, NOTIFICATION_TYPE, COD_SETTINGS } = require('../constants');
 const { uploadBuffer } = require('../config/cloudinary');
+const { paymentRepo } = require('../repositories');
 
 class OrderService {
   async placeOrder(userId, { items, shippingAddressId, paymentMethod, couponCode, customerNote }) {
@@ -56,7 +57,8 @@ class OrderService {
     const shippingCharge = subtotal >= 499 ? 0 : 49;
     const taxAmount = 0;
     const couponDiscount = 0; // Applied via cart service
-    const totalAmount = subtotal + shippingCharge + taxAmount - couponDiscount;
+    const codConfirmationCharge = paymentMethod === PAYMENT_METHOD.COD ? COD_SETTINGS.CONFIRMATION_CHARGE : 0;
+    const totalAmount = subtotal + shippingCharge + taxAmount - couponDiscount; // codConfirmationCharge is prepaid, not added to total
 
     // Get user's shipping address
     const User = require('../models/User');
@@ -72,10 +74,11 @@ class OrderService {
       taxAmount,
       couponCode,
       couponDiscount,
+      codConfirmationCharge,
       totalAmount,
       shippingAddress: address.toObject(),
       paymentMethod,
-      status: paymentMethod === PAYMENT_METHOD.COD ? ORDER_STATUS.CONFIRMED : ORDER_STATUS.PENDING,
+      status: ORDER_STATUS.PENDING,
       customerNote,
     });
 
@@ -168,6 +171,42 @@ class OrderService {
     });
 
     return updated;
+  }
+
+  async confirmCodOrder(orderId, userId) {
+    const order = await orderRepo.findById(orderId);
+    if (!order) throw ApiError.notFound('Order not found.');
+    if (order.user.toString() !== userId) throw ApiError.forbidden();
+    if (order.paymentMethod !== PAYMENT_METHOD.COD) throw ApiError.badRequest('Not a COD order.');
+    if (order.paymentStatus === PAYMENT_STATUS.PAID) throw ApiError.badRequest('COD charge already confirmed.');
+
+    // Create Payment record in DB for the ₹100 COD confirmation charge
+    const payment = await paymentRepo.create({
+      order: orderId,
+      user: userId,
+      provider: PAYMENT_METHOD.RAZORPAY,
+      amount: COD_SETTINGS.CONFIRMATION_CHARGE,
+      currency: 'INR',
+      status: PAYMENT_STATUS.CAPTURED,
+      paidAt: new Date(),
+    });
+
+    // Link payment, confirm order status and payment status
+    await orderRepo.updateById(orderId, {
+      payment: payment._id,
+      paymentStatus: PAYMENT_STATUS.PAID,
+      status: ORDER_STATUS.CONFIRMED,
+    });
+    await orderRepo.addStatusHistory(orderId, ORDER_STATUS.CONFIRMED, `COD confirmation charge of ₹${COD_SETTINGS.CONFIRMATION_CHARGE} collected via Razorpay`, userId);
+
+    await notificationService.createNotification(userId, {
+      type: NOTIFICATION_TYPE.PAYMENT_SUCCESS,
+      title: 'COD Confirmed',
+      message: `COD confirmation charge of ₹${COD_SETTINGS.CONFIRMATION_CHARGE} collected for order #${order.orderNumber}.`,
+      data: { orderId: order._id },
+    });
+
+    return { message: MESSAGES.COD_CHARGE_PAID, codConfirmationCharge: COD_SETTINGS.CONFIRMATION_CHARGE };
   }
 
   async generateInvoice(orderId) {

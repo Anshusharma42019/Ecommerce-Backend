@@ -15,5 +15,6 @@ router.get('/:id', ctrl.getOrder);
 router.post('/:id/cancel', validate(v.cancelOrder), ctrl.cancelOrder);
 router.post('/:id/return', validate(v.returnOrder), ctrl.requestReturn);
 router.get('/:id/invoice', ctrl.getInvoice);
+router.post('/:id/cod-confirm', ctrl.confirmCodOrder);
 
 module.exports = router;

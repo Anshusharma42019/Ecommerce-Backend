@@ -32,4 +32,11 @@ const initiateRefund = asyncHandler(async (req, res) => {
   sendSuccess(res, result.message);
 });
 
-module.exports = { createRazorpayOrder, verifyRazorpayPayment, createStripeIntent, razorpayWebhook, initiateRefund };
+const failRazorpayPayment = asyncHandler(async (req, res) => {
+  const result = await paymentService.failPayment(req.params.orderId, req.body);
+  sendSuccess(res, result.message);
+});
+
+module.exports = { createRazorpayOrder, verifyRazorpayPayment, failRazorpayPayment, createStripeIntent, razorpayWebhook, initiateRefund };
+
+

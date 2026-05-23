@@ -34,7 +34,7 @@ class PaymentService {
     });
 
     await orderRepo.updateById(orderId, { payment: payment._id });
-    return { razorpayOrderId: rzpOrder.id, amount: rzpOrder.amount, currency: rzpOrder.currency, paymentId: payment._id };
+    return { razorpayOrderId: rzpOrder.id, razorpayKeyId: process.env.RAZORPAY_KEY_ID?.trim(), amount: rzpOrder.amount, currency: rzpOrder.currency, paymentId: payment._id };
   }
 
   async verifyRazorpayPayment({ razorpayOrderId, razorpayPaymentId, razorpaySignature, orderId }) {
@@ -107,7 +107,28 @@ class PaymentService {
     return { received: true };
   }
 
-  async initiateRefund(paymentId, amount, reason) {
+  async failPayment(orderId, { reason, code } = {}) {
+    const order = await orderRepo.findById(orderId);
+    if (!order) throw ApiError.notFound('Order not found.');
+
+    // Update payment record if exists
+    if (order.payment) {
+      await paymentRepo.updateById(order.payment, {
+        status: PAYMENT_STATUS.FAILED,
+        failedAt: new Date(),
+        failureCode: code || 'USER_DISMISSED',
+        failureMessage: reason || 'Payment was not completed.',
+      });
+    }
+
+    // Mark order payment status as failed
+    await orderRepo.updateById(orderId, { paymentStatus: PAYMENT_STATUS.FAILED });
+    await orderRepo.addStatusHistory(orderId, ORDER_STATUS.FAILED, reason || 'Payment failed or dismissed', null);
+
+    return { message: 'Payment marked as failed.' };
+  }
+
+  async processRefund(paymentId, { amount, reason } = {}) {
     const payment = await paymentRepo.findById(paymentId);
     if (!payment) throw ApiError.notFound('Payment not found.');
 
