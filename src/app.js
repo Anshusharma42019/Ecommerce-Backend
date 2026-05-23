@@ -43,6 +43,7 @@ const corsOptions = {
     'https://ecommerce-backend-xi-ten.vercel.app',
     'https://ecommerce-website-orcin-chi-51.vercel.app',
     'https://www.trivenayurveda.com',
+    'https://trivenayurveda.in',
     'http://localhost:3000',
     'http://localhost:5000',
     'http://127.0.0.1:5500',
