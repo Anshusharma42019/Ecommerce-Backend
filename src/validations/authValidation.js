@@ -6,7 +6,7 @@ const register = Joi.object({
   firstName: Joi.string().trim().min(2).max(50).required(),
   lastName: Joi.string().trim().min(2).max(50).required(),
   email: Joi.string().email().lowercase().required(),
-  phone: Joi.string().allow('').pattern(/^[6-9]\d{9}$/).optional().messages({ 'string.pattern.base': 'Invalid Indian phone number.' }),
+  phone: Joi.string().pattern(/^[6-9]\d{9}$/).required().messages({ 'string.pattern.base': 'Invalid Indian phone number.' }),
   password: Joi.string().min(8).max(72).pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/).required()
     .messages({ 'string.pattern.base': 'Password must have uppercase, lowercase, and a number.' }),
   address: Joi.string().allow('').trim().optional(),
